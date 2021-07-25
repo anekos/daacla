@@ -105,6 +105,16 @@ class Daacla:
         self.connection = sqlite3.connect(self.path, isolation_level=None)
         self._ready: Dict[Meta, bool] = defaultdict(bool)
 
+    def delete(self, klass: Type[T], key: Any) -> bool:
+        meta = self.prepare_table(klass)
+        key_column = meta.validate_key()
+        q = f"""DELETE FROM {meta.table} WHERE {key_column} = ?"""
+        cur = self.connection.execute(q, (key, ))
+        return cur.rowcount == 1
+
+    def exists(self, klass: Type[T], key: Any) -> bool:
+        return self.get(klass, key) is not None
+
     def get(self, klass: Type[T], key: Any) -> Optional[T]:
         meta = self.prepare_table(klass)
         key_column = meta.validate_key()

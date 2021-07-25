@@ -91,3 +91,29 @@ def test_upsert_is_also_insert(db: Daacla) -> None:
     assert got == apple
     assert got.visits == apple.visits
     assert got.visits == 22
+
+
+def test_exists(db: Daacla) -> None:
+    apple_url = 'http://apple.com/'
+
+    assert not db.exists(WebPage, key=apple_url)
+
+    apple = WebPage(url=apple_url)
+    db.insert(apple)
+
+    assert db.exists(WebPage, key=apple_url)
+
+
+def test_delete(db: Daacla) -> None:
+    apple_url = 'http://apple.com/'
+
+    assert not db.delete(WebPage, key=apple_url)
+
+    apple = WebPage(url=apple_url)
+    db.insert(apple)
+
+    assert db.exists(WebPage, key=apple_url)
+
+    assert db.delete(WebPage, key=apple.url)
+
+    assert not db.exists(WebPage, key=apple_url)
