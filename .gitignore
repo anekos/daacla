@@ -1,1 +1,4 @@
 *.sqlite
+dist/
+build/
+*.egg-info/
