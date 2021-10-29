@@ -1,3 +1,2 @@
 appdirs
-mypy
 pytest
