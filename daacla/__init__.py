@@ -2,9 +2,12 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
+import os
 import re
 import sqlite3
+import sys
 
+from appdirs import user_data_dir
 
 TableInstance = Any
 TableClass = Type[TableInstance]
@@ -99,9 +102,14 @@ def _n_place_holders(n: int) -> str:
 class Daacla:
     path: Optional[str] = None
 
+    @staticmethod
+    def with_app_name(app_name: str, author: str) -> 'Daacla':
+        path = os.path.join(user_data_dir(app_name, author), 'daacla.sqlite')
+        return Daacla(path=path)
+
     def __post_init__(self) -> None:
         if self.path is None:
-            self.path = 'daacla.sqlite'
+            self.path = os.path.join(sys.path[0], 'daacla.sqlite')
         self.connection = sqlite3.connect(self.path, isolation_level=None)
         self._ready: Dict[Meta, bool] = defaultdict(bool)
 
