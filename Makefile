@@ -5,7 +5,7 @@ deploy-test: clean
 
 deploy-prod: clean
 	python3 setup.py sdist bdist_wheel
-	python3 -m twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*
+	python3 -m twine upload --verbose dist/*
 
 clean:
 	- rm -rf *.egg-info build/ dist/
