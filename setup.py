@@ -8,7 +8,7 @@ def slurp(filename: str) -> List[str]:
 
 setuptools.setup(
     name='daacla',
-    version='0.0.2',
+    version='0.0.3',
     author='anekos',
     author_email='pypi@snca.net',
     description='Python module to management `dataclass` objects using SQLite',
