@@ -103,7 +103,7 @@ class Daacla:
     path: Optional[str] = None
 
     @staticmethod
-    def with_app_name(app_name: str, author: str) -> 'Daacla':
+    def on_user_data_dir(app_name: str, author: str) -> 'Daacla':
         path = os.path.join(user_data_dir(app_name, author), 'daacla.sqlite')
         return Daacla(path=path)
 
