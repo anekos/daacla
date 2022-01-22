@@ -110,7 +110,8 @@ class Daacla:
     def __post_init__(self) -> None:
         if self.path is None:
             self.path = os.path.join(sys.path[0], 'daacla.sqlite')
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        if not self.path == ':memory:':
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
         self.connection = sqlite3.connect(self.path, isolation_level=None)
         self._ready: Dict[Meta, bool] = defaultdict(bool)
 
