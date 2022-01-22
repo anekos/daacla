@@ -1,6 +1,12 @@
 
+default: test lint
+
 test:
 	pytest .
+
+lint:
+	mypy daacla
+	pycodestyle daacla
 
 deploy-test: test clean
 	python3 setup.py sdist bdist_wheel
