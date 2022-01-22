@@ -1,5 +1,5 @@
 
-default: test lint
+default: lint test
 
 test:
 	pytest .
