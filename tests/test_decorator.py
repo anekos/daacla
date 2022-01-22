@@ -117,3 +117,16 @@ def test_delete(db: Daacla) -> None:
     assert db.delete(WebPage, key=apple.url)
 
     assert not db.exists(WebPage, key=apple_url)
+
+
+def test_select(db: Daacla) -> None:
+    db.insert(WebPage(url='apple'))
+    assert len(list(db.select(WebPage, 'true'))) == 1
+
+    db.insert(WebPage(url='pear', visits=1))
+    db.insert(WebPage(url='orange', visits=3))
+    db.insert(WebPage(url='berry', visits=3))
+
+    assert len(list(db.select(WebPage, 'visits = ?', 3))) == 2
+    assert list(db.select(WebPage, 'visits = ?', 1))[0].url == 'pear'
+    assert len(list(db.select(WebPage, 'visits = ?', 5))) == 0

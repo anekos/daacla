@@ -1,7 +1,7 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Iterator, Optional, Tuple, Type, TypeVar, Union
 import os
 import re
 import sqlite3
@@ -186,3 +186,13 @@ class Daacla:
         q = f'''REPLACE INTO {meta.table} ({', '.join(meta.fields.keys())}) VALUES ({_n_place_holders(len(meta.fields))})'''
         cur = self.connection.execute(q, meta.values(instance))
         return cur.rowcount == 1
+
+    def select(self, klass: Type[T], expression: str, *args: Any) -> Iterator[T]:
+        meta = self.prepare_table(klass)
+        q = f"""SELECT {', '.join(meta.fields.keys())} FROM {meta.table} WHERE {expression}"""
+        cur = self.connection.cursor()
+        for t in cur.execute(q, args):
+            params = {}
+            for k, v in zip(meta.fields.keys(), t):
+                params[k] = v
+            yield klass(**params)  # type: ignore
