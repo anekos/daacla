@@ -1,2 +1,5 @@
 mypy
 pycodestyle
+setuptools
+twine
+wheel
