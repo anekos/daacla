@@ -167,6 +167,23 @@ class Daacla:
 
         return meta
 
+    def set(self, instance: TableInstance, key: Any, sets: Dict[str, str]) -> bool:
+        '''
+        the values of `sets` must not be invalid SQL expression
+        '''
+        meta = self.prepare_table(instance)
+        key_column = meta.validate_key()
+
+        # XXX `?` con not be used like as below
+        # pairs = map(lambda kv: '='.join(kv), zip(sets.keys(), ['?'] * len(sets)))
+        # q = f'''UPDATE {meta.table} SET {', '.join(pairs)} WHERE {key_column} = ?'''
+        # cur = self.connection.execute(q, (*sets.values(), key))
+
+        pairs = list(map('='.join, sets.items()))
+        q = f'''UPDATE {meta.table} SET {', '.join(pairs)} WHERE {key_column} = ?'''
+        cur = self.connection.execute(q, (key,))
+        return cur.rowcount == 1
+
     def update(self, instance: TableInstance, **kwargs: Any) -> bool:
         meta = self.prepare_table(instance)
         key_column = meta.validate_key()

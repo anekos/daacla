@@ -62,6 +62,19 @@ def test_update(db: Daacla) -> None:
     assert got.visits == 11
 
 
+def test_set(db: Daacla) -> None:
+    apple_url = 'http://apple.com/'
+    apple = WebPage(url=apple_url, visits=10)
+    db.insert(apple)
+    got1 = db.get(WebPage, key=apple_url)
+    assert got1 is not None
+    assert got1.visits == 10
+    assert db.set(WebPage, key=apple_url, sets={'visits': 'visits + 1'})
+    got2 = db.get(WebPage, key=apple_url)
+    assert got2 is not None
+    assert got2.visits == 11
+
+
 def test_update_is_not_insert(db: Daacla) -> None:
     apple_url = 'http://apple.com/'
     apple = WebPage(url=apple_url)
