@@ -9,6 +9,9 @@ import sys
 
 from appdirs import user_data_dir
 
+from daacla.convert import from_sqlite
+
+
 TableInstance = Any
 TableClass = Type[TableInstance]
 
@@ -49,6 +52,12 @@ class Meta:
     def set_values(self, instance: TableInstance, values: Dict[str, Any]) -> None:
         for k, v in values.items():
             setattr(instance, k, v)
+
+    def from_sqlite(self, key: str, value: Any) -> Any:
+        tipe = self.fields[key]
+        if tipe == type(value):
+            return value
+        return from_sqlite(value, tipe)
 
 
 def table(key: Optional[str] = None) -> Callable[[Type], TableClass]:
@@ -133,7 +142,7 @@ class Daacla:
         for t in cur.execute(q, (key,)):
             params = {}
             for k, v in zip(meta.fields.keys(), t):
-                params[k] = v
+                params[k] = meta.from_sqlite(k, v)
             return klass(**params)  # type: ignore
         return None
 
@@ -167,6 +176,24 @@ class Daacla:
 
         return meta
 
+    # TODO Upsertion
+    def set(self, instance: TableInstance, key: Any, sets: Dict[str, str]) -> bool:
+        '''
+        the values of `sets` must not be invalid SQL expression
+        '''
+        meta = self.prepare_table(instance)
+        key_column = meta.validate_key()
+
+        # XXX `?` con not be used like as below
+        # pairs = map(lambda kv: '='.join(kv), zip(sets.keys(), ['?'] * len(sets)))
+        # q = f'''UPDATE {meta.table} SET {', '.join(pairs)} WHERE {key_column} = ?'''
+        # cur = self.connection.execute(q, (*sets.values(), key))
+
+        pairs = list(map('='.join, sets.items()))
+        q = f'''UPDATE {meta.table} SET {', '.join(pairs)} WHERE {key_column} = ?'''
+        cur = self.connection.execute(q, (key,))
+        return cur.rowcount == 1
+
     def update(self, instance: TableInstance, **kwargs: Any) -> bool:
         meta = self.prepare_table(instance)
         key_column = meta.validate_key()
@@ -194,5 +221,5 @@ class Daacla:
         for t in cur.execute(q, args):
             params = {}
             for k, v in zip(meta.fields.keys(), t):
-                params[k] = v
+                params[k] = meta.from_sqlite(k, v)
             yield klass(**params)  # type: ignore
