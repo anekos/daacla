@@ -1,7 +1,8 @@
-
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
 
+from dateutil.tz import tzoffset
 import pytest
 
 from daacla import Daacla, table
@@ -15,6 +16,7 @@ class WebPage:
     rate: float = 0.0
     closed: bool = False
     title: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
 
 @pytest.fixture()
@@ -29,6 +31,23 @@ def test_column_typing(db: Daacla) -> None:
     assert db.meta(WebPage).columns['visits'] == 'INTEGER'
     assert db.meta(WebPage).columns['rate'] == 'REAL'
     assert db.meta(WebPage).columns['closed'] == 'BOOL'
+
+
+def test_column_converter(db: Daacla) -> None:
+    assert db.meta(WebPage).from_sqlite('url', 'foo') == 'foo'
+    assert db.meta(WebPage).from_sqlite('closed', None) is None
+    assert db.meta(WebPage).from_sqlite('closed', True)
+    assert db.meta(WebPage).from_sqlite('updated_at', '2000-12-01T15:30:45') == datetime(2000, 12, 1, 15, 30, 45)
+    assert db.meta(WebPage).from_sqlite('updated_at', '2000-12-01T15:30:45+0900') == datetime(2000, 12, 1, 15, 30, 45, tzinfo=tzoffset(None, 32400))
+
+    now = datetime.now(tz=timezone.utc)
+    instance = WebPage(url='http://example.com/', updated_at=now, closed=True)
+    db.insert(instance)
+    found = db.get(WebPage, key=instance.url)
+    assert found is not None
+    assert found.closed == instance.closed
+    assert isinstance(found.closed, bool)
+    assert instance.updated_at == found.updated_at
 
 
 def test_table_name(db: Daacla) -> None:

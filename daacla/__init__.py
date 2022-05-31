@@ -9,6 +9,9 @@ import sys
 
 from appdirs import user_data_dir
 
+from daacla.convert import from_sqlite
+
+
 TableInstance = Any
 TableClass = Type[TableInstance]
 
@@ -49,6 +52,12 @@ class Meta:
     def set_values(self, instance: TableInstance, values: Dict[str, Any]) -> None:
         for k, v in values.items():
             setattr(instance, k, v)
+
+    def from_sqlite(self, key: str, value: Any) -> Any:
+        tipe = self.fields[key]
+        if tipe == type(value):
+            return value
+        return from_sqlite(value, tipe)
 
 
 def table(key: Optional[str] = None) -> Callable[[Type], TableClass]:
@@ -133,7 +142,7 @@ class Daacla:
         for t in cur.execute(q, (key,)):
             params = {}
             for k, v in zip(meta.fields.keys(), t):
-                params[k] = v
+                params[k] = meta.from_sqlite(k, v)
             return klass(**params)  # type: ignore
         return None
 
@@ -212,5 +221,5 @@ class Daacla:
         for t in cur.execute(q, args):
             params = {}
             for k, v in zip(meta.fields.keys(), t):
-                params[k] = v
+                params[k] = meta.from_sqlite(k, v)
             yield klass(**params)  # type: ignore
